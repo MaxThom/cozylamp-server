@@ -32,7 +32,14 @@ var summaries = new[]
  * The dictonary holding the connection key must be deleted if all devices are off and will be recreated on ON request.
  */
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/api/health", () =>
+{
+    
+    return "All system operational Commander !";
+})
+.WithName("Health");
+
+app.MapGet("/api/weatherforecast", () =>
 {
     var forecast = Enumerable.Range(1, 5).Select(index =>
        new WeatherForecast
