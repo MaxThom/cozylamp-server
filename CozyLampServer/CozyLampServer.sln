@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31808.319
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CozyLampServer", "CozyLampServer\CozyLampServer.csproj", "{281EFF95-3825-4468-887C-0D6F7C815AC4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{81FD5D32-DE5A-47AA-A7F0-9B08D393767B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,6 +20,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{281EFF95-3825-4468-887C-0D6F7C815AC4} = {81FD5D32-DE5A-47AA-A7F0-9B08D393767B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CE21167D-5366-4AF5-962F-F3FC9B5532C9}
