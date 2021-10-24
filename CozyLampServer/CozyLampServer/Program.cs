@@ -8,54 +8,86 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI();
+//}
 
 //app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+int clean_timeout_sec = 20;
+int device_timeout_sec = 30;
 
+var groups = new Dictionary<string, List<Device>>();
 
 /*
- * 
- * Each device has a connection key (that can be modified on the esp32 web ui).
+ * Each device has a group key and a device key (that can be modified on the esp32 web ui).
  * On ON, the lamp send a request saying its on, the api returns if another device in the group is ON.
- * If so, the device change to the ThinkOfYou light.
- * On OFF, the lamp send a request saying its off.
- * Every 5 seconds, a lamp in ON state send the ON request. The API must detect the timeout if one lamp doesnt send its refresh and set it to OFF.
+ * If so, the device change to the ThinkOfYou light. Repeat every 10 sec
+ * On OFF, the lamp stop the 10 sec request.
+ * The API must detect the timeout if one lamp doesnt send its refresh and remove it from the group.
  * The dictonary holding the connection key must be deleted if all devices are off and will be recreated on ON request.
  */
 
 app.MapGet("/api/health", () =>
 {
-    
     return "All system operational Commander !";
 })
 .WithName("Health");
 
-app.MapGet("/api/weatherforecast", () =>
+app.MapGet("/api/updatestatus/{device_key}/{group_key}", (string device_key, string group_key) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-       new WeatherForecast
-       (
-           DateTime.Now.AddDays(index),
-           Random.Shared.Next(-20, 55),
-           summaries[Random.Shared.Next(summaries.Length)]
-       ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    if (!groups.ContainsKey(group_key))
+        groups[group_key] = new List<Device>();
+    
+    if (groups[group_key].Count(x => x.Name.Equals(device_key)) == 0)
+        groups[group_key].Add(new Device()
+        {
+            Name = device_key,
+            LastUpdate = DateTime.Now
+        });
+    else
+        groups[group_key].Where(x => x.Name.Equals(device_key)).First().LastUpdate = DateTime.UtcNow;
 
+    return groups[group_key].Where(x => !x.Name.Equals(device_key));
+})
+.WithName("UpdateStatus");
+
+async Task removeOldConnection()
+{
+    while (true)
+    {
+        foreach (var group in groups.ToList())
+        {
+            foreach (var device in group.Value.ToList())
+            {
+                if ((DateTime.UtcNow - device.LastUpdate).TotalSeconds >= device_timeout_sec)
+                {
+                    group.Value.RemoveAll(x => x.Name == device.Name);
+                }
+            }
+            if (group.Value.Count == 0)
+            {
+                groups.Remove(group.Key);
+            }
+        }
+
+        await Task.Delay(clean_timeout_sec * 1000);
+    }
+}
+
+app.MapGet("/api/groups", () =>
+{
+    return groups.ToArray();
+})
+.WithName("GetGroups");
+
+_ = removeOldConnection().ConfigureAwait(false);
 app.Run();
 
-internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
+internal class Device
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public string Name { get; set; } = "";
+    public DateTime LastUpdate { get; set; }
 }
