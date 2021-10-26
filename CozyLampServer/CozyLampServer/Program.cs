@@ -90,7 +90,7 @@ app.MapGet("/api/settings", () =>
     return new Settings
     {
         clean_timeout_sec = clean_timeout_sec,
-        device_timeout_sec = clean_timeout_sec
+        device_timeout_sec = device_timeout_sec
     };
 })
 .WithName("GetSettings");
@@ -98,7 +98,7 @@ app.MapGet("/api/settings", () =>
 app.MapPost("/api/settings", (Settings settings) =>
 {
     clean_timeout_sec = settings.clean_timeout_sec;
-    device_timeout_sec = settings.clean_timeout_sec;
+    device_timeout_sec = settings.device_timeout_sec;
     return settings;
 })
 .WithName("SetSettings");
