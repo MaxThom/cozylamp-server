@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -83,6 +85,24 @@ app.MapGet("/api/groups", () =>
 })
 .WithName("GetGroups");
 
+app.MapGet("/api/settings", () =>
+{
+    return new Settings
+    {
+        clean_timeout_sec = clean_timeout_sec,
+        device_timeout_sec = clean_timeout_sec
+    };
+})
+.WithName("GetSettings");
+
+app.MapPost("/api/settings", (Settings settings) =>
+{
+    clean_timeout_sec = settings.clean_timeout_sec;
+    device_timeout_sec = settings.clean_timeout_sec;
+    return settings;
+})
+.WithName("SetSettings");
+
 _ = removeOldConnection().ConfigureAwait(false);
 app.Run();
 
@@ -90,4 +110,10 @@ internal class Device
 {
     public string Name { get; set; } = "";
     public DateTime LastUpdate { get; set; }
+}
+
+internal class Settings
+{
+    public int clean_timeout_sec { get; set; }
+    public int device_timeout_sec { get; set; }
 }
